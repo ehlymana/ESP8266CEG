@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\images\0fd3416c.jpeg" />
+    <Content Remove="wwwroot\images\2642651.png" />
+    <Content Remove="wwwroot\images\2752878.png" />
+    <Content Remove="wwwroot\images\3762131.png" />
+    <Content Remove="wwwroot\images\3901848.png" />
+    <Content Remove="wwwroot\images\3917805.png" />
+    <Content Remove="wwwroot\images\609803.png" />
+    <Content Remove="wwwroot\images\68f64b9d.jpeg" />
+    <Content Remove="wwwroot\images\738853.png" />
+    <Content Remove="wwwroot\images\8ad73f3c.jpeg" />
+    <Content Remove="wwwroot\images\default-image.jpg" />
+    <Content Remove="wwwroot\images\default-logo.png" />
+    <Content Remove="wwwroot\images\placeholder-image.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\0fd3416c.jpeg" />
+    <None Include="wwwroot\images\2642651.png" />
+    <None Include="wwwroot\images\2752878.png" />
+    <None Include="wwwroot\images\3762131.png" />
+    <None Include="wwwroot\images\3901848.png" />
+    <None Include="wwwroot\images\3917805.png" />
+    <None Include="wwwroot\images\609803.png" />
+    <None Include="wwwroot\images\68f64b9d.jpeg" />
+    <None Include="wwwroot\images\738853.png" />
+    <None Include="wwwroot\images\8ad73f3c.jpeg" />
+    <None Include="wwwroot\images\default-image.jpg" />
+    <None Include="wwwroot\images\default-logo.png" />
+    <None Include="wwwroot\images\placeholder-image.png" />
+  </ItemGroup>
+
+</Project>
