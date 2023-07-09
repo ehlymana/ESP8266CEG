@@ -1,74 +1,135 @@
 ﻿using ESPClient.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
+using System.Drawing;
+using System.Net;
+using System.Reflection;
+using System.Text;
 
 namespace ESPClient.Controllers
 {
     public class HomeController : Controller
     {
+        #region Attributes
+
         private readonly ILogger<HomeController> _logger;
 
-        Microcontroller microcontroller = new Microcontroller();
+        static Microcontroller microcontroller = new Microcontroller();
+
+        #endregion
+
+        #region Constructor
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
         }
 
+        #endregion
+
+        #region Routes for Microcontroller communication
+
+        /// <summary>
+        /// Show webpage with new settings
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public IActionResult Index()
         {
+            // perform web-request to update sensor values
+            GetNewSensorValues();
             return View(microcontroller);
         }
 
+        /// <summary>
+        /// Connect to the specified IP address
+        /// </summary>
+        /// <param name="IPAddress"></param>
+        /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> Index(Microcontroller newConfiguration)
+        public async Task<ActionResult> Connect(string IPAddress)
         {
-            return View();
-            /*
-            // new IP address is entered
-            if (microcontroller.IPAddress != newConfiguration.IPAddress && newConfiguration.IPAddress.Length > 0)
+            try
             {
-                // attempt to connect to ESP
                 HttpClient client = new HttpClient();
-                var responseString = await client.GetStringAsync("http://" + newConfiguration.IPAddress);
-                responseString = "";
+                var responseString = await client.GetStringAsync("http://" + IPAddress + "/");
+                if (responseString == "Connection: OK")
+                    microcontroller.IPAddress = IPAddress;
+                else
+                    microcontroller.IPAddress = null;
             }
-            else
+            catch
             {
-                microcontroller.IPAddress = "";
-                microcontroller.ConnectionStatus = "Disconnected";
+                microcontroller.IPAddress = null;
             }
-
-            // user changed the time of the day manually (or automatic change????)
-            if (microcontroller.ConnectionStatus == "Connected" && microcontroller.Time != newConfiguration.Time)
-            {
-                // send request to ESP to change the time
-
-                microcontroller.Time = newConfiguration.Time;
-            }
-
-            // user changed the mode manually
-            if (microcontroller.ConnectionStatus == "Connected" && microcontroller.Mode != newConfiguration.Mode)
-            {
-                // send request to ESP to change the mode
-
-                microcontroller.Mode = newConfiguration.Mode;
-            }
-
-            return View(microcontroller);*/
+            
+            return RedirectToAction("Index");
         }
 
+        /// <summary>
+        /// Change active mode and regime
+        /// </summary>
+        /// <param name="mode"></param>
+        /// <param name="regime"></param>
+        /// <returns></returns>
         [HttpPost]
-        public ActionResult Connect(string IPAddress)
+        public async Task<ActionResult> ModeRegime(string mode, string regime)
         {
-            return View();
+            if (microcontroller.IPAddress == null)
+                return RedirectToAction("Index"); ;
+
+            try
+            {
+                HttpClient client = new HttpClient();
+                var responseString = await client.GetStringAsync("http://" + microcontroller.IPAddress + "/" + mode);
+                if (responseString != "Change: OK")
+                    microcontroller.IPAddress = null;
+
+                responseString = await client.GetStringAsync("http://" + microcontroller.IPAddress + "/" + regime);
+                if (responseString != "Change: OK")
+                    microcontroller.IPAddress = null;
+            }
+            catch
+            {
+                microcontroller.IPAddress = null;
+            }
+
+            return RedirectToAction("Index");
         }
 
-        [HttpPost]
-        public ActionResult ModeRegime(string mode, string regime)
+        /// <summary>
+        /// Read new sensor values from the microcontroller
+        /// </summary>
+        public async void GetNewSensorValues()
         {
-            return View();
+            if (microcontroller.IPAddress == null)
+                return;
+
+            try
+            {
+
+                HttpClient client = new HttpClient();
+                var responseString = await client.GetStringAsync("http://" + microcontroller.IPAddress + "/sensors");
+                var sensorValues = responseString.Split(",");
+
+                microcontroller.LightSensor = sensorValues[0] == "0";
+                microcontroller.MovementSensor = sensorValues[1] == "1";
+                microcontroller.SoundSensor = Int32.Parse(sensorValues[2]);
+                microcontroller.LEDRingStrip = Color.FromName(sensorValues[3]);
+                microcontroller.SystemMode = (SystemMode)Enum.Parse(typeof(SystemMode), sensorValues[4]);
+                microcontroller.SystemRegime = (SystemRegime)Enum.Parse(typeof(SystemRegime), sensorValues[5]);
+            }
+            catch
+            {
+                microcontroller.IPAddress = null;
+            }
         }
+
+        #endregion
+
+        #region Routes for Cameras Communication
+
+        #endregion
     }
 }

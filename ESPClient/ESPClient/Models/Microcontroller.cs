@@ -4,6 +4,8 @@ namespace ESPClient.Models
 {
     public class Microcontroller
     {
+        #region Properties
+
         public string? IPAddress { get; set; }
 
         public SystemMode SystemMode { get; set; }
@@ -19,5 +21,7 @@ namespace ESPClient.Models
         public Color LEDRingStrip { get; set; }
 
         public List<Camera> Cameras { get; set; }
+
+        #endregion
     }
 }

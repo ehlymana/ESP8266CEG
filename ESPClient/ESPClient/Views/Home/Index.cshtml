@@ -3,7 +3,7 @@
 }
 
 @model ESPClient.Models.Microcontroller
-
+<meta http-equiv="refresh" content="5" />
     <section class="u-clearfix u-section-1" id="sec-38b5">
       <div class="u-clearfix u-sheet u-sheet-1">
         <h1 class="u-align-center u-text u-text-default u-text-1">Welcome to the ESP-8266 alarm system! </h1>
@@ -124,7 +124,14 @@
                     <form method="post" asp-controller="Home" asp-action="Connect" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form" style="padding: 10px;">
                         <div class="u-form-group u-label-top u-form-group-1">
                             <label for="name-06af" class="u-label u-label-1">IP address:</label>
-                            <input id="name-06af" name="IPAddress" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text">
+                            @if (Model.IPAddress != null)
+                            {
+                                <input id="name-06af" name="IPAddress" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text" value=@Model.IPAddress>
+                            }
+                            else
+                            {
+                                <input id="name-06af" name="IPAddress" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text">
+                            }
                         </div>
                         <div class="u-align-right u-form-group u-form-submit u-label-top">
                             <button type="submit" class="u-btn u-btn-round u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-28 u-btn-1">CONNECT</button>
@@ -143,11 +150,11 @@
                           <td class="u-table-cell u-text-palette-2-base u-table-cell-8">
                             @if (Model.IPAddress == null)
                             {
-                                <p style="text-color: red">Disconnected</p>
+                                <p style="color: red">Disconnected</p>
                             }
                             else
                             {
-                                <p style="text-color: green">Connected</p>
+                                <p style="color: green">Connected</p>
                             }
                           </td>
                         </tr>
