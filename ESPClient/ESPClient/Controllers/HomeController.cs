@@ -15,7 +15,7 @@ namespace ESPClient.Controllers
 
         private readonly ILogger<HomeController> _logger;
 
-        static Microcontroller microcontroller = new Microcontroller();
+        static Subsystems subsystems = new Subsystems();
 
         #endregion
 
@@ -39,7 +39,7 @@ namespace ESPClient.Controllers
         {
             // perform web-request to update sensor values
             GetNewSensorValues();
-            return View(microcontroller);
+            return View(subsystems);
         }
 
         /// <summary>
@@ -55,15 +55,15 @@ namespace ESPClient.Controllers
                 HttpClient client = new HttpClient();
                 var responseString = await client.GetStringAsync("http://" + IPAddress + "/");
                 if (responseString == "Connection: OK")
-                    microcontroller.IPAddress = IPAddress;
+                    subsystems.Microcontroller.IPAddress = IPAddress;
                 else
-                    microcontroller.IPAddress = null;
+                    subsystems.Microcontroller.IPAddress = null;
             }
             catch
             {
-                microcontroller.IPAddress = null;
+                subsystems.Microcontroller.IPAddress = null;
             }
-            
+
             return RedirectToAction("Index");
         }
 
@@ -76,23 +76,23 @@ namespace ESPClient.Controllers
         [HttpPost]
         public async Task<ActionResult> ModeRegime(string mode, string regime)
         {
-            if (microcontroller.IPAddress == null)
+            if (subsystems.Microcontroller.IPAddress == null)
                 return RedirectToAction("Index"); ;
 
             try
             {
                 HttpClient client = new HttpClient();
-                var responseString = await client.GetStringAsync("http://" + microcontroller.IPAddress + "/" + mode);
+                var responseString = await client.GetStringAsync("http://" + subsystems.Microcontroller.IPAddress + "/" + mode);
                 if (responseString != "Change: OK")
-                    microcontroller.IPAddress = null;
+                    subsystems.Microcontroller.IPAddress = null;
 
-                responseString = await client.GetStringAsync("http://" + microcontroller.IPAddress + "/" + regime);
+                responseString = await client.GetStringAsync("http://" + subsystems.Microcontroller.IPAddress + "/" + regime);
                 if (responseString != "Change: OK")
-                    microcontroller.IPAddress = null;
+                    subsystems.Microcontroller.IPAddress = null;
             }
             catch
             {
-                microcontroller.IPAddress = null;
+                subsystems.Microcontroller.IPAddress = null;
             }
 
             return RedirectToAction("Index");
@@ -103,32 +103,82 @@ namespace ESPClient.Controllers
         /// </summary>
         public async void GetNewSensorValues()
         {
-            if (microcontroller.IPAddress == null)
+            if (subsystems.Microcontroller.IPAddress == null)
                 return;
 
             try
             {
 
                 HttpClient client = new HttpClient();
-                var responseString = await client.GetStringAsync("http://" + microcontroller.IPAddress + "/sensors");
+                var responseString = await client.GetStringAsync("http://" + subsystems.Microcontroller.IPAddress + "/sensors");
                 var sensorValues = responseString.Split(",");
 
-                microcontroller.LightSensor = sensorValues[0] == "0";
-                microcontroller.MovementSensor = sensorValues[1] == "1";
-                microcontroller.SoundSensor = Int32.Parse(sensorValues[2]);
-                microcontroller.LEDRingStrip = Color.FromName(sensorValues[3]);
-                microcontroller.SystemMode = (SystemMode)Enum.Parse(typeof(SystemMode), sensorValues[4]);
-                microcontroller.SystemRegime = (SystemRegime)Enum.Parse(typeof(SystemRegime), sensorValues[5]);
+                subsystems.Microcontroller.LightSensor = sensorValues[0] == "0";
+                subsystems.Microcontroller.MovementSensor = sensorValues[1] == "1";
+                subsystems.Microcontroller.SoundSensor = Int32.Parse(sensorValues[2]);
+                subsystems.Microcontroller.LEDRingStrip = Color.FromName(sensorValues[3]);
+                subsystems.Microcontroller.SystemMode = (SystemMode)Enum.Parse(typeof(SystemMode), sensorValues[4]);
+                subsystems.Microcontroller.SystemRegime = (SystemRegime)Enum.Parse(typeof(SystemRegime), sensorValues[5]);
             }
             catch
             {
-                microcontroller.IPAddress = null;
+                subsystems.Microcontroller.IPAddress = null;
             }
         }
 
         #endregion
 
         #region Routes for Cameras Communication
+
+        [HttpPost]
+        public ActionResult EstablishConnection(string cameraID)
+        {
+            if (!subsystems.Cameras.Any(c => c.ID == cameraID))
+            {
+                subsystems.Cameras.Add(new Camera(cameraID));
+            }
+
+            subsystems.Cameras[0].DetectFace();
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public ActionResult ChangeCamera(string camera)
+        {
+            subsystems.ActiveCamera = subsystems.Cameras.FindIndex(c => c.ID == camera);
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public ActionResult ReceivePhoto(string ID, string base64Image)
+        {
+            Camera camera = subsystems.Cameras.Find(c => c.ID == ID);
+
+            if (camera == null)
+            {
+                camera = new Camera(ID);
+                subsystems.Cameras.Add(camera);
+                subsystems.ActiveCamera = subsystems.Cameras.Count - 1;
+            }
+
+            camera.LatestImage = base64Image;
+            camera.LatestImageTimestamp = DateTime.Now;
+
+            if (camera.DetectFace().Result && subsystems.Microcontroller.LEDRingStrip == Color.Red)
+                camera.Instruction = "Alarm";
+            else
+                camera.Instruction = "OK";
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public string GetInstruction(string ID)
+        {
+            return subsystems.Cameras.Find(c => c.ID == ID).Instruction;
+        }
 
         #endregion
     }

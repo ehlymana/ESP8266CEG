@@ -2,7 +2,7 @@
     ViewData["Title"] = "ESP-8266 Alarm System";
 }
 
-@model ESPClient.Models.Microcontroller
+@model ESPClient.Models.Subsystems
 <meta http-equiv="refresh" content="5" />
     <section class="u-clearfix u-section-1" id="sec-38b5">
       <div class="u-clearfix u-sheet u-sheet-1">
@@ -31,11 +31,11 @@
                         <tr style="height: 46px;">
                           <td class="u-table-cell u-table-cell-1">Light sensor:</td>
                           <td class="u-table-cell u-table-cell-2">
-                                @if (Model.IPAddress == null)
+                                @if (Model.Microcontroller.IPAddress == null)
                                 {
                                     <p class="u-table-cell u-table-cell-4">Unknown</p>
                                 }
-                                else if (Model.LightSensor)
+                                else if (Model.Microcontroller.LightSensor)
                                 {
                                     <p class="u-table-cell u-table-cell-4">ON</p>
                                 }
@@ -48,11 +48,11 @@
                         <tr style="height: 46px;">
                           <td class="u-table-cell">Movement sensor:</td>
                           <td class="u-table-cell u-table-cell-4">
-                              @if (Model.IPAddress == null)
+                              @if (Model.Microcontroller.IPAddress == null)
                               {
                                     <p class="u-table-cell u-table-cell-4">Unknown</p>
                               }
-                              else if (Model.MovementSensor)
+                              else if (Model.Microcontroller.MovementSensor)
                               {
                                     <p class="u-table-cell u-table-cell-4">ON</p>
                               }
@@ -65,13 +65,13 @@
                         <tr style="height: 46px;">
                           <td class="u-table-cell">Sound sensor:</td>
                           <td class="u-table-cell u-table-cell-6">
-                                @if (Model.IPAddress == null)
+                                @if (Model.Microcontroller.IPAddress == null)
                                 {
                                     <p class="u-table-cell u-table-cell-4">Unknown</p>
                                 }
                                 else
                                 {
-                                    <p class="u-table-cell u-table-cell-4">@Model.SoundSensor</p>
+                                    <p class="u-table-cell u-table-cell-4">@Model.Microcontroller.SoundSensor</p>
                                 }
                           </td>
                         </tr>
@@ -80,7 +80,7 @@
                   </div>
                   <div class="u-border-3 u-border-grey-dark-1 u-line u-line-horizontal u-line-2"></div>
                   <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-3">LED ring strip status:</p>
-                @if (Model.IPAddress == null)
+                @if (Model.Microcontroller.IPAddress == null)
                 {
                     <p class="u-align-center u-text u-text-default u-text-4">
                         Unknown
@@ -88,7 +88,7 @@
                     </p>
                     <div class="u-border-2 u-border-grey-75 u-radius-20 u-shape u-shape-round u-shape-1" style="background-color: white"></div>
                 }
-                else if (Model.LEDRingStrip == System.Drawing.Color.Green)
+                else if (Model.Microcontroller.LEDRingStrip == System.Drawing.Color.Green)
                 {
                     <p class="u-align-center u-text u-text-default u-text-4">
                         Green (Safe)
@@ -96,7 +96,7 @@
                     </p>
                     <div class="u-border-2 u-border-grey-75 u-radius-20 u-shape u-shape-round u-shape-1" style="background-color: green"></div>
                 }
-                else if (Model.LEDRingStrip == System.Drawing.Color.Yellow)
+                else if (Model.Microcontroller.LEDRingStrip == System.Drawing.Color.Yellow)
                 {
                     <p class="u-align-center u-text u-text-default u-text-4">
                         Yellow (Suspicious)
@@ -124,9 +124,9 @@
                     <form method="post" asp-controller="Home" asp-action="Connect" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form" style="padding: 10px;">
                         <div class="u-form-group u-label-top u-form-group-1">
                             <label for="name-06af" class="u-label u-label-1">IP address:</label>
-                            @if (Model.IPAddress != null)
+                            @if (Model.Microcontroller.IPAddress != null)
                             {
-                                <input id="name-06af" name="IPAddress" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text" value=@Model.IPAddress>
+                                <input id="name-06af" name="IPAddress" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text" value=@Model.Microcontroller.IPAddress>
                             }
                             else
                             {
@@ -148,7 +148,7 @@
                         <tr style="height: 31px;">
                           <td class="u-table-cell u-table-cell-7">Connection status:</td>
                           <td class="u-table-cell u-text-palette-2-base u-table-cell-8">
-                            @if (Model.IPAddress == null)
+                            @if (Model.Microcontroller.IPAddress == null)
                             {
                                 <p style="color: red">Disconnected</p>
                             }
@@ -161,26 +161,26 @@
                         <tr style="height: 46px;">
                           <td class="u-table-cell">Active system mode:</td>
                           <td class="u-table-cell u-table-cell-10">
-                            @if (Model.IPAddress == null)
+                            @if (Model.Microcontroller.IPAddress == null)
                             {
                                 <p>Unknown</p>
                             }
                             else
                             {
-                                @Model.SystemMode
+                                @Model.Microcontroller.SystemMode
                             }
                           </td>
                         </tr>
                         <tr style="height: 46px;">
                           <td class="u-table-cell">Active system regime:</td>
                           <td class="u-table-cell u-table-cell-12">
-                            @if (Model.IPAddress == null)
+                            @if (Model.Microcontroller.IPAddress == null)
                             {
                                 <p>Unknown</p>
                             }
                             else
                             {
-                                @Model.SystemRegime
+                                @Model.Microcontroller.SystemRegime
                             }
                           </td>
                         </tr>
@@ -240,22 +240,33 @@
             </h2>
             <div class="u-border-3 u-border-grey-dark-1 u-line u-line-horizontal u-line-1"></div>
             <div class="u-form u-form-1">
-              <form action="https://forms.nicepagesrv.com/v2/form/process" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form-2" style="padding: 10px;">
+                <form method="post" asp-controller="Home" asp-action="EstablishConnection" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form-2" style="padding: 10px;">
+                    <div class="u-form-group u-form-partition-factor-2 u-form-select u-vertical-form-control-visible u-form-group-1">
+                        <label for="select-05e1" class="u-label u-label-1">Camera ID:</label>
+                        <input id="name-06af" name="cameraID" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text">
+                    </div>
+                    <div class="u-align-center u-form-group u-form-submit" style="margin-bottom: 0.5em">
+                        <button type="submit" class="u-btn u-btn-round u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-28 u-btn-2">ADD NEW CAMERA</button>
+                    </div>
+                </form>
+            </div>
+            <div class="u-form u-form-1">
+              <form method="post" asp-controller="Home" asp-action="ChangeCamera" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form-2" style="padding: 10px;">
                 <div class="u-form-group u-form-partition-factor-2 u-form-select u-vertical-form-control-visible u-form-group-1">
                   <label for="select-05e1" class="u-label u-label-1">Select camera:</label>
                   <div class="u-form-select-wrapper">
-                    <select id="select-05e1" name="select" class="u-border-2 u-input u-input-rectangle u-none u-input-1"></select>
+                    <select id="select-05e1" name="camera" class="u-border-2 u-input u-input-rectangle u-none u-input-1">
+                        @foreach (var group in Model.Cameras)
+                          {
+                            <option value="@group.ID">@group.ID</option>
+                          }
+                    </select>
                     <svg class="u-caret u-caret-svg" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" style="fill:currentColor;" xml:space="preserve"><polygon class="st0" points="8,12 2,4 14,4 "></polygon></svg>
                   </div>
                 </div>
-                <div class="u-align-center u-form-group u-form-submit">
-                  <a href="#" class="u-btn u-btn-round u-btn-submit u-button-style u-radius-28 u-btn-1">ADD NEW CAMERA</a>
-                  <input type="submit" value="submit" class="u-form-control-hidden">
+                <div class="u-align-center u-form-group u-form-submit" style="margin-bottom: 0.5em">
+                    <button type="submit" class="u-btn u-btn-round u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-28 u-btn-2">CHANGE CAMERA</button>
                 </div>
-                <div class="u-form-send-message u-form-send-success"> Thank you! Your message has been sent. </div>
-                <div class="u-form-send-error u-form-send-message"> Unable to send your message. Please fix errors then try again. </div>
-                <input type="hidden" value="" name="recaptchaResponse">
-                <input type="hidden" name="formServices" value="7123f3447489c323ba6b7b6a0b962691">
               </form>
             </div>
             <div class="u-clearfix u-layout-wrap u-layout-wrap-1">
@@ -264,9 +275,27 @@
                   <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-1">
                     <div class="u-container-layout u-container-layout-2">
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-2">Live feed:</p>
-                      <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src="images/placeholder-image.png" alt="" data-image-width="715" data-image-height="479">
+                      @if (Model.ActiveCamera < 0)
+                      {
+                          <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src=@Model.Cameras[Model.ActiveCamera].LatestImage data-image-width="715" data-image-height="200">
+                      }
+                      else
+                      {
+                          <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src="images/placeholder-image.png" data-image-width="715" data-image-height="200">
+                      }
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-3">Latest photo received at:</p>
-                      <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4">Unknown</p>
+                      @if (Model.ActiveCamera < 0)
+                      {
+                        <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
+                            Unknown
+                        </p>
+                      }
+                      else
+                      {
+                        <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
+                            Model.Cameras[Model.ActiveCamera].LatestImageTimestamp
+                        </p>          
+                      }
                     </div>
                   </div>
                   <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-2">
@@ -274,7 +303,18 @@
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-5">Event report:</p>
                       <div class="u-border-4 u-border-grey-75 u-container-style u-grey-10 u-group u-radius-50 u-shape-round u-group-2">
                         <div class="u-container-layout u-container-layout-4">
-                          <p class="u-text u-text-default u-text-6">empty</p>
+                            @if (Model.ActiveCamera < 0)
+                            {
+                                <p class="u-text u-text-default u-text-6">
+                                    empty
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="u-text u-text-default u-text-6">
+                                    @Model.Cameras[Model.ActiveCamera].GetAllEvents()
+                                </p>
+                            }
                         </div>
                       </div>
                     </div>
