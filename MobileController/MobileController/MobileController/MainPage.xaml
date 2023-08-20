@@ -1,16 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="clr-namespace:Xamarin.CommunityToolkit.UI.Views;assembly=Xamarin.CommunityToolkit"
              x:Class="MobileController.MainPage">
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="6*" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
+        
+        <Label Grid.Row="0" Grid.ColumnSpan="2" Text="ESP8266 Xamarin Alarm" FontSize="Large" />
 
-        <Image x:Name="PhotoImage" />
-        <Button x:Name="CameraButton" Text="Take Photo" Grid.Row="1" />
+        <Label Grid.Row="1" Grid.Column="0" Text="Web-server root:" />
+        <Entry x:Name="WebServerEntry" Grid.Row="1" Grid.Column="1" Placeholder="www.server.com" />
+
+        <Label Grid.Row="2" Grid.Column="0" Text="Camera ID:" />
+        <Entry x:Name="CameraIDEntry" Grid.Row="2" Grid.Column="1" Placeholder="LivingRoom1" />
+
+        <Button x:Name="ConnectButton" Grid.Row="3" Grid.ColumnSpan="2" Text="Connect" Clicked="Connect" />
+
+        <Label Grid.Row="4" Grid.ColumnSpan="2" Text="Live camera preview:" />
+
+        <xct:CameraView x:Name="CameraViewControl" Grid.Row="5" Grid.ColumnSpan="2" CaptureMode="Photo" MediaCaptured="CameraView_MediaCaptured" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
+
+        <Label Grid.Row="6" Grid.Column="0" Text="Alarm status" FontAttributes="Bold" />
+        <Grid Grid.Row="6" Grid.Column="1">
+            <Rectangle x:Name="AlarmRectangle" Fill="Green"/>
+            <Label x:Name="AlarmIndicatorLabel" Text="Not triggered" Margin="5"/>
+        </Grid>
+
+        <Label Grid.Row="7" Grid.Column="0" Text="Alarm playing on speakers:" />
+        <Switch x:Name="SpeakersSwitch" Grid.Row="7" Grid.Column="1" IsToggled="false" IsEnabled="false" />
+
+        <Label Grid.Row="8" Grid.Column="0" Text="Phone call to police initiated:" />
+        <Switch x:Name="PhoneCallSwitch" Grid.Row="8" Grid.Column="1" IsToggled="false" IsEnabled="false" />
     </Grid>
 
 </ContentPage>

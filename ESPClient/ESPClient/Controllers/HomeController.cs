@@ -79,16 +79,23 @@ namespace ESPClient.Controllers
             if (subsystems.Microcontroller.IPAddress == null)
                 return RedirectToAction("Index"); ;
 
+            SystemMode newMode = mode == "day" ? SystemMode.Day : SystemMode.Night;
+            SystemRegime newRegime = regime == "home" ? SystemRegime.AtHome : SystemRegime.Away;
+
             try
             {
                 HttpClient client = new HttpClient();
                 var responseString = await client.GetStringAsync("http://" + subsystems.Microcontroller.IPAddress + "/" + mode);
                 if (responseString != "Change: OK")
                     subsystems.Microcontroller.IPAddress = null;
+                else
+                    subsystems.Microcontroller.SystemMode = newMode;
 
                 responseString = await client.GetStringAsync("http://" + subsystems.Microcontroller.IPAddress + "/" + regime);
                 if (responseString != "Change: OK")
                     subsystems.Microcontroller.IPAddress = null;
+                else
+                    subsystems.Microcontroller.SystemRegime = newRegime;
             }
             catch
             {
@@ -115,10 +122,8 @@ namespace ESPClient.Controllers
 
                 subsystems.Microcontroller.LightSensor = sensorValues[0] == "0";
                 subsystems.Microcontroller.MovementSensor = sensorValues[1] == "1";
-                subsystems.Microcontroller.SoundSensor = Int32.Parse(sensorValues[2]);
+                subsystems.Microcontroller.SoundSensor = Double.Parse(sensorValues[2]);
                 subsystems.Microcontroller.LEDRingStrip = Color.FromName(sensorValues[3]);
-                subsystems.Microcontroller.SystemMode = (SystemMode)Enum.Parse(typeof(SystemMode), sensorValues[4]);
-                subsystems.Microcontroller.SystemRegime = (SystemRegime)Enum.Parse(typeof(SystemRegime), sensorValues[5]);
             }
             catch
             {
@@ -131,16 +136,14 @@ namespace ESPClient.Controllers
         #region Routes for Cameras Communication
 
         [HttpPost]
-        public ActionResult EstablishConnection(string cameraID)
+        public HttpResponseMessage EstablishConnection(string cameraID)
         {
             if (!subsystems.Cameras.Any(c => c.ID == cameraID))
             {
                 subsystems.Cameras.Add(new Camera(cameraID));
             }
 
-            subsystems.Cameras[0].DetectFace();
-
-            return RedirectToAction("Index");
+            return new HttpResponseMessage(HttpStatusCode.OK);
         }
 
         [HttpPost]
@@ -152,16 +155,12 @@ namespace ESPClient.Controllers
         }
 
         [HttpPost]
-        public ActionResult ReceivePhoto(string ID, string base64Image)
+        public string ReceivePhoto(string cameraID, string base64Image)
         {
-            Camera camera = subsystems.Cameras.Find(c => c.ID == ID);
+            Camera camera = subsystems.Cameras.Find(c => c.ID == cameraID);
 
             if (camera == null)
-            {
-                camera = new Camera(ID);
-                subsystems.Cameras.Add(camera);
-                subsystems.ActiveCamera = subsystems.Cameras.Count - 1;
-            }
+                return "Not found";
 
             camera.LatestImage = base64Image;
             camera.LatestImageTimestamp = DateTime.Now;
@@ -171,13 +170,7 @@ namespace ESPClient.Controllers
             else
                 camera.Instruction = "OK";
 
-            return RedirectToAction("Index");
-        }
-
-        [HttpGet]
-        public string GetInstruction(string ID)
-        {
-            return subsystems.Cameras.Find(c => c.ID == ID).Instruction;
+            return camera.Instruction;
         }
 
         #endregion

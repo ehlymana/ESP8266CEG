@@ -240,17 +240,6 @@
             </h2>
             <div class="u-border-3 u-border-grey-dark-1 u-line u-line-horizontal u-line-1"></div>
             <div class="u-form u-form-1">
-                <form method="post" asp-controller="Home" asp-action="EstablishConnection" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form-2" style="padding: 10px;">
-                    <div class="u-form-group u-form-partition-factor-2 u-form-select u-vertical-form-control-visible u-form-group-1">
-                        <label for="select-05e1" class="u-label u-label-1">Camera ID:</label>
-                        <input id="name-06af" name="cameraID" class="u-border-grey-75 u-input u-input-rectangle u-none u-radius-12 u-input-1" type="text">
-                    </div>
-                    <div class="u-align-center u-form-group u-form-submit" style="margin-bottom: 0.5em">
-                        <button type="submit" class="u-btn u-btn-round u-button-style u-hover-palette-1-dark-1 u-palette-1-base u-radius-28 u-btn-2">ADD NEW CAMERA</button>
-                    </div>
-                </form>
-            </div>
-            <div class="u-form u-form-1">
               <form method="post" asp-controller="Home" asp-action="ChangeCamera" class="u-clearfix u-form-horizontal u-form-spacing-10 u-inner-form" source="email" name="form-2" style="padding: 10px;">
                 <div class="u-form-group u-form-partition-factor-2 u-form-select u-vertical-form-control-visible u-form-group-1">
                   <label for="select-05e1" class="u-label u-label-1">Select camera:</label>
@@ -275,27 +264,27 @@
                   <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-1">
                     <div class="u-container-layout u-container-layout-2">
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-2">Live feed:</p>
-                      @if (Model.ActiveCamera < 0)
-                      {
-                          <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src=@Model.Cameras[Model.ActiveCamera].LatestImage data-image-width="715" data-image-height="200">
-                      }
-                      else
-                      {
-                          <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src="images/placeholder-image.png" data-image-width="715" data-image-height="200">
-                      }
-                      <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-3">Latest photo received at:</p>
-                      @if (Model.ActiveCamera < 0)
-                      {
-                        <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
-                            Unknown
-                        </p>
-                      }
-                      else
-                      {
-                        <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
-                            Model.Cameras[Model.ActiveCamera].LatestImageTimestamp
-                        </p>          
-                      }
+                          @if (Model.Cameras.Count > 0 && Model.ActiveCamera > 0 && Model.Cameras[Model.ActiveCamera].LatestImage != null)
+                          {
+                              <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src=@Model.Cameras[Model.ActiveCamera].LatestImage data-image-width="715" data-image-height="200">
+                          }
+                          else
+                          {
+                              <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src="images/placeholder-image.png" data-image-width="715" data-image-height="200">
+                          }
+                          <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-3">Latest photo received at:</p>
+                          @if (Model.Cameras.Count < 1 || Model.ActiveCamera < 0)
+                          {
+                            <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
+                                Unknown
+                            </p>
+                          }
+                          else
+                          {
+                            <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
+                                Model.Cameras[Model.ActiveCamera].LatestImageTimestamp
+                            </p>          
+                          }
                     </div>
                   </div>
                   <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-2">
@@ -303,7 +292,7 @@
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-5">Event report:</p>
                       <div class="u-border-4 u-border-grey-75 u-container-style u-grey-10 u-group u-radius-50 u-shape-round u-group-2">
                         <div class="u-container-layout u-container-layout-4">
-                            @if (Model.ActiveCamera < 0)
+                            @if (Model.Cameras.Count < 1 || Model.ActiveCamera < 0)
                             {
                                 <p class="u-text u-text-default u-text-6">
                                     empty

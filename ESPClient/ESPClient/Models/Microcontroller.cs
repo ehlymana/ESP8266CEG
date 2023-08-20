@@ -16,7 +16,7 @@ namespace ESPClient.Models
 
         public bool MovementSensor { get; set; }
 
-        public int SoundSensor { get; set; }
+        public double SoundSensor { get; set; }
 
         public Color LEDRingStrip { get; set; }
 
