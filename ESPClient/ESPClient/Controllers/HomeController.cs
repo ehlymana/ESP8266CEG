@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
 using System.Drawing;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 
@@ -141,6 +142,8 @@ namespace ESPClient.Controllers
             if (!subsystems.Cameras.Any(c => c.ID == cameraID))
             {
                 subsystems.Cameras.Add(new Camera(cameraID));
+                subsystems.Cameras[subsystems.Cameras.Count - 1].Events.Add("Connection successfully established at: " + DateTime.Now.ToString());
+                subsystems.ActiveCamera = subsystems.Cameras.Count - 1;
             }
 
             return new HttpResponseMessage(HttpStatusCode.OK);
@@ -155,24 +158,36 @@ namespace ESPClient.Controllers
         }
 
         [HttpPost]
-        public string ReceivePhoto(string cameraID, string base64Image)
+        public string ReceivePhoto([FromForm] PhotoModel data)
         {
-            Camera camera = subsystems.Cameras.Find(c => c.ID == cameraID);
+            Camera camera = subsystems.Cameras.Find(c => c.ID == data.cameraID);
 
             if (camera == null)
                 return "Not found";
 
-            camera.LatestImage = base64Image;
+            camera.Events.Add("New image received at: " + DateTime.Now.ToString());
+            camera.LatestImage = "data:image/jpeg;base64," + data.base64Image;
             camera.LatestImageTimestamp = DateTime.Now;
 
-            if (camera.DetectFace().Result && subsystems.Microcontroller.LEDRingStrip == Color.Red)
-                camera.Instruction = "Alarm";
+            bool faces = camera.DetectFace().Result;
+            if (faces)
+                camera.Events.Add("Faces detected on the image");
             else
+                camera.Events.Add("No faces detected on the image.");
+
+            if (faces && subsystems.Microcontroller.LEDRingStrip == Color.Red)
+            {
+                camera.Events.Add("Alarm signal initiated");
+                camera.Instruction = "Alarm";
+            }
+            else
+            {
                 camera.Instruction = "OK";
+            }
 
             return camera.Instruction;
         }
 
-        #endregion
+    #endregion
     }
 }

@@ -38,4 +38,8 @@
     <None Include="wwwroot\images\placeholder-image.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+  </ItemGroup>
+
 </Project>

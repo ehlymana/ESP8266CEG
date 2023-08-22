@@ -264,7 +264,7 @@
                   <div class="u-container-style u-layout-cell u-size-30 u-layout-cell-1">
                     <div class="u-container-layout u-container-layout-2">
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-2">Live feed:</p>
-                          @if (Model.Cameras.Count > 0 && Model.ActiveCamera > 0 && Model.Cameras[Model.ActiveCamera].LatestImage != null)
+                          @if (Model.Cameras.Count > 0 && Model.ActiveCamera > -1 && Model.Cameras[Model.ActiveCamera].LatestImage != null)
                           {
                               <img class="u-border-4 u-border-grey-75 u-image u-image-round u-radius-50 u-image-1" src=@Model.Cameras[Model.ActiveCamera].LatestImage data-image-width="715" data-image-height="200">
                           }
@@ -282,7 +282,7 @@
                           else
                           {
                             <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-4" height="300px">
-                                Model.Cameras[Model.ActiveCamera].LatestImageTimestamp
+                                @Model.Cameras[Model.ActiveCamera].LatestImageTimestamp
                             </p>          
                           }
                     </div>
@@ -291,7 +291,7 @@
                     <div class="u-container-layout u-container-layout-3">
                       <p class="u-align-center u-large-text u-text u-text-default u-text-variant u-text-5">Event report:</p>
                       <div class="u-border-4 u-border-grey-75 u-container-style u-grey-10 u-group u-radius-50 u-shape-round u-group-2">
-                        <div class="u-container-layout u-container-layout-4">
+                        <div class="u-container-layout u-container-layout-4" style="overflow-y: auto">
                             @if (Model.Cameras.Count < 1 || Model.ActiveCamera < 0)
                             {
                                 <p class="u-text u-text-default u-text-6">
@@ -300,9 +300,12 @@
                             }
                             else
                             {
-                                <p class="u-text u-text-default u-text-6">
-                                    @Model.Cameras[Model.ActiveCamera].GetAllEvents()
-                                </p>
+                                @foreach (string e in Model.Cameras[Model.ActiveCamera].Events)
+                                {
+                                    <p class="u-text u-text-default u-text-6">
+                                        @e
+                                    </p>
+                                }
                             }
                         </div>
                       </div>

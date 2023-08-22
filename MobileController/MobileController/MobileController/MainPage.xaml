@@ -33,7 +33,8 @@
 
         <Label Grid.Row="4" Grid.ColumnSpan="2" Text="Live camera preview:" />
 
-        <xct:CameraView x:Name="CameraViewControl" Grid.Row="5" Grid.ColumnSpan="2" CaptureMode="Photo" MediaCaptured="CameraView_MediaCaptured" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
+        <xct:CameraView x:Name="CameraViewControl" Grid.Row="5" Grid.ColumnSpan="2" CaptureMode="Photo" MediaCaptured="CameraView_MediaCaptured"
+                        VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand"  />
 
         <Label Grid.Row="6" Grid.Column="0" Text="Alarm status" FontAttributes="Bold" />
         <Grid Grid.Row="6" Grid.Column="1">
