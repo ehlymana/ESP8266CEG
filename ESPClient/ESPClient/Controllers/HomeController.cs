@@ -7,6 +7,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
 
 namespace ESPClient.Controllers
 {
@@ -188,6 +191,285 @@ namespace ESPClient.Controllers
             return camera.Instruction;
         }
 
-    #endregion
+        #endregion
+
+        #region Black Box Testing
+
+        /// <summary>
+        /// Route for performing black-box testing and exporting the testing results to a TXT file
+        /// </summary>
+        [HttpGet]
+        public ActionResult BlackBoxTesting()
+        {
+            List<double> FDR_CEG1 = new List<double>(), FDR_CEG1Min1 = new List<double>(), FDR_CEG1Min2 = new List<double>(),
+                         FDR_CEG2 = new List<double>(), FDR_CEG2Min1 = new List<double>(), FDR_CEG2Min2 = new List<double>(),
+                         MTSI_CEG1Min1 = new List<double>(), MTSI_CEG1Min2 = new List<double>(),
+                         MTSI_CEG2Min1 = new List<double>(), MTSI_CEG2Min2 = new List<double>(),
+                         ITE_CEG1 = new List<double>(), ITE_CEG1Min1 = new List<double>(), ITE_CEG1Min2 = new List<double>(),
+                         ITE_CEG2 = new List<double>(), ITE_CEG2Min1 = new List<double>(), ITE_CEG2Min2 = new List<double>();
+
+            // find out which tests detect which faults
+            List<List<int>> testsWhichDetectFaultsCEG1 = new List<List<int>>(),
+                            testsWhichDetectFaultsCEG2 = new List<List<int>>();
+
+            for (int i = 0; i < 7; i++)
+                testsWhichDetectFaultsCEG1.Add(FindOutWhichTestDetectsFault(0, i));
+
+            for (int i = 0; i < 5; i++)
+                testsWhichDetectFaultsCEG2.Add(FindOutWhichTestDetectsFault(1, i));
+
+            for (int tryBB = 0; tryBB < 100; tryBB++)
+            {
+                // form the list of all feasible test cases and expected outcomes
+                List<Test> testsCEG1 = GetAllFeasibleTests(0),
+                           testsCEG2 = GetAllFeasibleTests(1);
+
+
+                // activate a random number of faults for CEG1
+                Random random = new Random();
+                int numberOfFaults = random.Next(1, 8);
+                List<int> allFaults = new List<int>();
+                for (int i = 0; i < numberOfFaults; i++)
+                {
+                    int nextFault = random.Next(0, 7);
+                    if (!allFaults.Contains(nextFault))
+                        allFaults.Add(nextFault);
+                }
+
+                // the faults need to be sorted so that software errors do not affect hardware errors
+                allFaults.Sort();
+
+                // inject each fault into all tests
+                foreach (int fault in allFaults)
+                    foreach (Test test in testsCEG1)
+                        test.InjectFault(fault);
+
+                // check how many faults were detected
+                List<int> detectedFaultsCEG1 = new List<int>(),
+                          detectedFaultsCEG1Min1 = new List<int>(),
+                          detectedFaultsCEG1Min2 = new List<int>();
+
+                for (int i = 0; i < testsCEG1.Count; i++)
+                {
+                    // check if test fails
+                    if (!testsCEG1[i].TestPasses())
+                    {
+                        // check each injected fault
+                        foreach (int fault in allFaults)
+                        {
+                            // test does not detect this fault - move to the next fault
+                            if (!testsWhichDetectFaultsCEG1[fault].Contains(i))
+                                continue;
+
+                            // this fault was not detected before - capture it
+                            if  (!detectedFaultsCEG1.Contains(fault))
+                                detectedFaultsCEG1.Add(fault);
+                            if (!detectedFaultsCEG1Min1.Contains(fault) && i < 10)
+                                detectedFaultsCEG1Min1.Add(fault);
+                            if (!detectedFaultsCEG1Min2.Contains(fault) && (i == 0 || i == 7 || i == 9))
+                                detectedFaultsCEG1Min2.Add(fault);
+                        }
+                    }
+                }
+
+                // calculate metrics for CEG1
+                FDR_CEG1.Add((double)detectedFaultsCEG1.Count / (double)allFaults.Count * 100.00);
+                FDR_CEG1Min1.Add((double)detectedFaultsCEG1Min1.Count / (double)allFaults.Count * 100.00);
+                FDR_CEG1Min2.Add((double)detectedFaultsCEG1Min2.Count / (double)allFaults.Count * 100.00);
+
+                if (detectedFaultsCEG1.Count > 0)
+                {
+                    MTSI_CEG1Min1.Add((1.00 - (double)detectedFaultsCEG1Min1.Count / (double)detectedFaultsCEG1.Count) * 100.00);
+                    MTSI_CEG1Min2.Add((1.00 - (double)detectedFaultsCEG1Min2.Count / (double)detectedFaultsCEG1.Count) * 100.00);
+                }
+                else
+                {
+                    MTSI_CEG1Min1.Add(0.00);
+                    MTSI_CEG1Min2.Add(0.00);
+                }              
+
+                ITE_CEG1.Add((double)detectedFaultsCEG1.Count / 64.00);
+                ITE_CEG1Min1.Add((double)detectedFaultsCEG1Min1.Count / 10.00);
+                ITE_CEG1Min2.Add((double)detectedFaultsCEG1Min2.Count / 3.00);
+
+                // activate a random number of faults for CEG2
+                numberOfFaults = random.Next(1, 6);
+                allFaults = new List<int>();
+                for (int i = 0; i < numberOfFaults; i++)
+                {
+                    int nextFault = random.Next(0, 5);
+
+                    if (!allFaults.Contains(nextFault))
+                        allFaults.Add(nextFault);
+                }
+
+                // inject each fault into all tests
+                foreach (int fault in allFaults)
+                    foreach (Test test in testsCEG2)
+                        test.InjectFault(fault);
+
+                // check how many faults were detected
+                List<int> detectedFaultsCEG2 = new List<int>(),
+                          detectedFaultsCEG2Min1 = new List<int>(),
+                          detectedFaultsCEG2Min2 = new List<int>();
+
+                for (int i = 0; i < testsCEG2.Count; i++)
+                {
+                    // check if test fails
+                    if (!testsCEG2[i].TestPasses())
+                    {
+                        // check each injected fault
+                        foreach (int fault in allFaults)
+                        {
+                            // test does not detect this fault - move to the next fault
+                            if (!testsWhichDetectFaultsCEG2[fault].Contains(i))
+                                continue;
+
+                            // this fault was not detected before - capture it
+                            if (!detectedFaultsCEG2.Contains(fault))
+                                detectedFaultsCEG2.Add(fault);
+                            if (!detectedFaultsCEG2Min1.Contains(fault) && (i == 7 || i == 10 || i == 13 || i == 16 || i == 17 || i == 19 || i == 22 || i == 25))
+                                detectedFaultsCEG2Min1.Add(fault);
+                            if (!detectedFaultsCEG2Min2.Contains(fault) && (i == 16 || i == 17 || i == 25))
+                                detectedFaultsCEG2Min2.Add(fault);
+                        }
+                    }
+                }
+
+                // calculate metrics for CEG2
+                FDR_CEG2.Add((double)detectedFaultsCEG2.Count / (double)allFaults.Count * 100.00);
+                FDR_CEG2Min1.Add((double)detectedFaultsCEG2Min1.Count / (double)allFaults.Count * 100.00);
+                FDR_CEG2Min2.Add((double)detectedFaultsCEG2Min2.Count / (double)allFaults.Count * 100.00);
+
+                if (detectedFaultsCEG2.Count > 0)
+                {
+                    MTSI_CEG2Min1.Add((1.00 - (double)detectedFaultsCEG2Min1.Count / (double)detectedFaultsCEG2.Count) * 100.00);
+                    MTSI_CEG2Min2.Add((1.00 - (double)detectedFaultsCEG2Min2.Count / (double)detectedFaultsCEG2.Count) * 100.00);
+                }
+                else
+                {
+                    MTSI_CEG2Min1.Add(0.00);
+                    MTSI_CEG2Min2.Add(0.00);
+                }
+
+                ITE_CEG2.Add((double)detectedFaultsCEG2.Count / 30.00);
+                ITE_CEG2Min1.Add((double)detectedFaultsCEG2Min1.Count / 8.00);
+                ITE_CEG2Min2.Add((double)detectedFaultsCEG2Min2.Count / 3.00);
+            }
+
+            // export average, min and max metrics results
+            string results = "";
+
+            results += "CEG1 FDR, MAX: " + Math.Round(FDR_CEG1.Max(), 2) + "%, AVG: " + Math.Round(FDR_CEG1.Average(), 2) + "%, MIN: " + Math.Round(FDR_CEG1.Min(), 2) + "%\n";
+            results += "FDR CEG1 MIN1, MAX: " + Math.Round(FDR_CEG1Min1.Max(), 2) + "%, AVG: " + Math.Round(FDR_CEG1Min1.Average(), 2) + "%, MIN: " + Math.Round(FDR_CEG1Min1.Min(), 2) + "%\n";
+            results += "FDR CEG1 MIN2, MAX: " + Math.Round(FDR_CEG1Min2.Max(), 2) + "%, AVG: " + Math.Round(FDR_CEG1Min2.Average(), 2) + "%, MIN: " + Math.Round(FDR_CEG1Min2.Min(), 2) + "%\n";
+
+            results += "\n";
+
+            results += "MTSI CEG1 MIN1, MAX: " + Math.Round(MTSI_CEG1Min1.Max(), 2) + "%, AVG: " + Math.Round(MTSI_CEG1Min1.Average(), 2) + "%, MIN: " + Math.Round(MTSI_CEG1Min1.Min(), 2) + "%\n";
+            results += "MTSI CEG1 MIN2, MAX: " + Math.Round(MTSI_CEG1Min2.Max(), 2) + "%, AVG: " + Math.Round(MTSI_CEG1Min2.Average(), 2) + "%, MIN: " + Math.Round(MTSI_CEG1Min2.Min(), 2) + "%\n";
+
+            results += "\n";
+
+            results += "ITE CEG1, MAX: " + Math.Round(ITE_CEG1.Max(), 2) + ", AVG: " + Math.Round(ITE_CEG1.Average(), 2) + ", MIN: " + Math.Round(ITE_CEG1.Min(), 2) + "\n";
+            results += "ITE CEG1 MIN1, MAX: " + Math.Round(ITE_CEG1Min1.Max(), 2) + ", AVG: " + Math.Round(ITE_CEG1Min1.Average(), 2) + ", MIN: " + Math.Round(ITE_CEG1Min1.Min(), 2) + "\n";
+            results += "ITE CEG1 MIN2, MAX: " + Math.Round(ITE_CEG1Min2.Max(), 2) + ", AVG: " + Math.Round(ITE_CEG1Min2.Average(), 2) + ", MIN: " + Math.Round(ITE_CEG1Min2.Min(), 2) + "\n";
+
+            results += "\n";
+
+            results += "FDR CEG2, MAX: " + Math.Round(FDR_CEG2.Max(), 2) + "%, AVG: " + Math.Round(FDR_CEG2.Average(), 2) + "%, MIN: " + Math.Round(FDR_CEG2.Min(), 2) + "%\n";
+            results += "FDR CEG2 MIN1, MAX: " + Math.Round(FDR_CEG2Min1.Max(), 2) + "%, AVG: " + Math.Round(FDR_CEG2Min1.Average(), 2) + "%, MIN: " + Math.Round(FDR_CEG2Min1.Min(), 2) + "%\n";
+            results += "FDR CEG2 MIN2, MAX: " + Math.Round(FDR_CEG2Min2.Max(), 2) + "%, AVG: " + Math.Round(FDR_CEG2Min2.Average(), 2) + "%, MIN: " + Math.Round(FDR_CEG2Min2.Min(), 2) + "%\n";
+
+            results += "\n";
+
+            results += "MTSI CEG2 MIN1, MAX: " + Math.Round(MTSI_CEG2Min1.Max(), 2) + "%, AVG: " + Math.Round(MTSI_CEG2Min1.Average(), 2) + "%, MIN: " + Math.Round(MTSI_CEG2Min1.Min(), 2) + "%\n";
+            results += "MTSI CEG2 MIN2, MAX: " + Math.Round(MTSI_CEG2Min2.Max(), 2) + "%, AVG: " + Math.Round(MTSI_CEG2Min2.Average(), 2) + "%, MIN: " + Math.Round(MTSI_CEG2Min2.Min(), 2) + "%\n";
+
+            results += "\n";
+
+            results += "ITE CEG2, MAX: " + Math.Round(ITE_CEG2.Max(), 2) + ", AVG: " + Math.Round(ITE_CEG2.Average(), 2) + ", MIN: " + Math.Round(ITE_CEG2.Min(), 2) + "\n";
+            results += "ITE CEG2 MIN1, MAX: " + Math.Round(ITE_CEG2Min1.Max(), 2) + ", AVG: " + Math.Round(ITE_CEG2Min1.Average(), 2) + ", MIN: " + Math.Round(ITE_CEG2Min1.Min(), 2) + "\n";
+            results += "ITE CEG2 MIN2, MAX: " + Math.Round(ITE_CEG2Min2.Max(), 2) + ", AVG: " + Math.Round(ITE_CEG2Min2.Average(), 2) + ", MIN: " + Math.Round(ITE_CEG2Min2.Min(), 2) + "\n";
+
+            System.IO.File.WriteAllText("BB_metrics.txt", results);
+
+            return RedirectToAction("Index");
+        }
+
+        /// <summary>
+        /// Helper method for finding out which tests detect which faults
+        /// </summary>
+        public List<int> FindOutWhichTestDetectsFault(int graph, int fault)
+        {
+            if (graph == 0 && fault == 0)
+                System.IO.File.WriteAllText("detection_of_faults.txt", "");
+
+            List<int> testsWhichDetectFault = new List<int>();
+
+            // forming the list of all feasible test cases and expected outcomes
+            List<Test> testsCEG = GetAllFeasibleTests(graph);
+
+
+            // inject the fault into all tests
+            for (int i = 0; i < testsCEG.Count; i++)
+            {
+                testsCEG[i].InjectFault(fault);
+                if (!testsCEG[i].TestPasses())
+                    testsWhichDetectFault.Add(i);
+            }
+
+            string results = "CEG: " + graph + ", FAULT: " + fault + "\n";
+            results += "TESTS: " + testsWhichDetectFault.Count + ", INDIVIDUAL: ";
+            foreach (int test in testsWhichDetectFault)
+                results += "T" + test + " ";
+            results += "\n\n";
+
+            System.IO.File.AppendAllText("detection_of_faults.txt", results);
+
+            return testsWhichDetectFault;
+        }
+
+        /// <summary>
+        /// Helper method for importing all test cases from TXT files
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <returns></returns>
+        List<Test> GetAllFeasibleTests(int graph)
+        {
+            List<string> inputFiles = new List<string>() { "testCases-IoT.txt", "testCases-server.txt" };
+            List<Test> tests = new List<Test>();
+
+            // read all test configurations from the input file
+            string[] testsTXT = System.IO.File.ReadAllLines(inputFiles[graph]);
+
+            // divide all tests into cause and effect values
+            foreach (var test in testsTXT.Skip(1))
+            {
+                string[] causesAndEffectsTXT = test.Split("\t");
+                List<bool> causes = new List<bool>();
+                List<bool> effects = new List<bool>();
+
+                int countCauses = 9, countEffects = 3;
+                if (graph == 1)
+                {
+                    countCauses = 8;
+                    countEffects = 6;
+                }
+
+                for (int j = 1; j < countCauses; j++)
+                    causes.Add(causesAndEffectsTXT[j] == "1");
+
+                for (int j = countCauses; j < countCauses + countEffects; j++)
+                    effects.Add(causesAndEffectsTXT[j] == "1");
+
+                tests.Add(new Test(graph, causes, effects));
+            }
+
+            return tests;
+        }
+
+        #endregion
+
     }
 }
