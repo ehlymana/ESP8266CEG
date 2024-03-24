@@ -5,7 +5,7 @@ This repository contains the programming code for the case study of black-box te
 If you use this dataset for your research, please cite the following work:
 
 ```
-E. Krupalija, E. Cogo, A. Karabegović, S. Omanović, and I. Bešić, "Usage of cause-effect graphs for reliability analysis of an embedded IoT alarm software system", submitted to Quality and Reliability Engineering International, 2023.
+E. Cogo, E. Cogo, A. Karabegović, S. Omanović, and I. Bešić, "Usage of cause-effect graphs for reliability analysis of an embedded IoT alarm software system", Quality and Reliability Engineering International, 2023, DOI: 10.1002/qre.3521.
 ```
 
 ## The embedded IoT subsystem
